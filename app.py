@@ -44,13 +44,13 @@ def map_kh_parking():
             lat = item[5]
             lng = item[4]
             info = '%s<br>%s<br>停車格數：%s' %(name, fee, total)
-            
+
             folium.Marker([float(lat), float(lng)], tooltip=info,
                         icon=folium.Icon(color='green', prefix='fa', icon='fa-car')).add_to(m)
-            
+
         except Exception as e:
-            print(e.args)    
-            
+            print(e.args)
+
     m.save('./map_kh_parking.html')
 
     return send_file('./map_kh_parking.html')
@@ -73,12 +73,12 @@ def job_wakeup():
 def send_line(msg, token='rpHUQIIMkArQh6EtQpqfjK6hjPN2jjNxh0zDbcFVoD2'):
     url = "https://notify-api.line.me/api/notify"  # --> 不支援http, 只能用https
     headers = {"Authorization" : "Bearer "+ token}
-    title = '排程測試'
+    title = '思敏'
     message =  '[%s] %s' %(title, msg)
     payload = {"message" :  message}
 
     r = requests.post(url ,headers = headers ,params=payload)
-    
+
 #- 空污通報
 def job_function2():
     url = 'https://data.epa.gov.tw/api/v1/aqx_p_432?format=json&api_key=9be7b239-557b-4c10-9775-78cadfc555e9'
@@ -98,7 +98,7 @@ def start_scheduler():
 
     # 每天早上6:30執行
     #scheduler.add_job(job_function2, 'cron', hour='6', minute='30')
-    scheduler.add_job(job_function2, 'cron', minute='*/1')
+    scheduler.add_job(job_function2, 'cron', minute='*/50')
 
     # start the scheduler
     scheduler.start()
