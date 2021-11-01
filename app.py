@@ -13,6 +13,11 @@ import geocoder
 from apscheduler.schedulers.background import BackgroundScheduler
 import os
 
+from sqlalchemy import create_engine
+import time
+import json
+import sqlite3
+
 app = Flask(__name__, static_url_path='', static_folder='static')
 
 @app.route("/", methods=['GET'])
@@ -89,6 +94,40 @@ def job_function2():
     for item in records:
         if item['County']=='高雄市' and item['SiteName']=='鳳山':
             send_line('%s>> AQI=%s' %(item['SiteName'], item['AQI']))
+
+# 資料庫
+def job_function3():
+
+    mysql_db_url = 'mysql+pymysql://user1:ji3g4user1@206.189.86.205:32769/testdb'
+    my_db = create_engine(mysql_db_url)
+
+    # check and create table
+    resultProxy = my_db.execute("CREATE TABLE IF NOT EXISTS lydia_aqi_table(uuid text NOT NULL, time text NOT NULL, aqi text, pm25 text)")
+
+    # get data
+    url = 'https://data.epa.gov.tw/api/v1/aqx_p_432?format=json&api_key=9be7b239-557b-4c10-9775-78cadfc555e9'
+    r = requests.get(url)
+    data = r.json()
+    records = data['records']
+    uuid = ''
+    my_time = ''
+    aqi = ''
+    pm25 = ''
+    for item in records:
+        if item['County']=='高雄市' and item['SiteName']=='鳳山':
+            uuid = item['SiteName']
+            my_time = item['PublishTime']
+            aqi = item['AQI']
+            pm25 = item['PM2.5']
+
+    # insert
+    resultProxy=my_db.execute("insert into lydia_aqi_table (uuid, time, aqi, pm25) values('%s', '%s', '%s', '%s')" %(uuid, my_time, aqi, pm25))
+
+    # get data from db
+    resultProxy=my_db.execute("select * from lydia_aqi_table")
+    data = resultProxy.fetchall()
+    print('-- data --')
+    print(data)
 
 def start_scheduler():
     scheduler = BackgroundScheduler()
